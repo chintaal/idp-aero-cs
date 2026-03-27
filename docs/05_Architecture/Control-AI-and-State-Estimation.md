@@ -186,6 +186,7 @@ This is sophisticated enough to be interesting and simple enough to finish well.
 
 ## See Also
 
+- [ML Models and Control Algorithms](ML-Models-and-Control-Algorithms.md)
 - [Simulation and Dataset Pipeline](../06_Simulation/Simulation-and-Dataset-Pipeline.md)
 - [Metrics, Ablations, and Benchmarks](../07_Experiments/Metrics-Ablations-and-Benchmarks.md)
 - [Future Extensions and Publication Ideas](../08_Project-Management/Future-Extensions-and-Publication-Ideas.md)
