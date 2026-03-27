@@ -1,0 +1,94 @@
+# Airbrake System Configuration
+# All values can be overridden via environment variables or CLI flags.
+
+simulation:
+  n_flights: 3000              # number of Monte Carlo flights to simulate
+  samples_per_flight: 20       # state snapshots per flight (coast phase only)
+  seed: 42
+  noise:
+    altitude_m: 2.0            # 1-sigma barometer noise [m]
+    velocity_ms: 0.5           # 1-sigma velocity noise [m/s]
+    accel_ms2: 0.3             # 1-sigma IMU noise [m/s²]
+  deployments: [0.0, 0.25, 0.5, 0.75, 1.0]
+
+rocket:
+  # Typical H-class sport rocket reference parameters
+  mass_wet:
+    min: 0.8
+    max: 2.5
+  mass_propellant:
+    min: 0.1
+    max: 0.6
+  A_ref:                       # cross-section area [m²]  ~35–70 mm diameter
+    min: 0.001
+    max: 0.004
+  Cd_body:
+    min: 0.40
+    max: 0.70
+  Cd_brake_max:
+    min: 0.40
+    max: 1.20
+  burn_time:
+    min: 1.0
+    max: 3.5
+  total_impulse:               # [N·s] H to I class
+    min: 50.0
+    max: 250.0
+  launch_altitude:             # [m] above sea level
+    min: 0.0
+    max: 800.0
+
+pinn:
+  hidden_dims: [128, 128, 64, 32]
+  dropout: 0.10
+  epochs: 150
+  batch_size: 512
+  lr: 3.0e-4
+  weight_decay: 1.0e-4
+  patience: 20                 # early stopping patience
+  device: "cpu"                # set to "cuda" for GPU
+
+baselines:
+  ridge:
+    alpha: 100.0
+  decision_tree:
+    max_depth: 8
+    min_samples_leaf: 20
+  extra_trees:
+    n_estimators: 300
+    max_features: 0.8
+  adaboost:
+    n_estimators: 200
+    learning_rate: 0.05
+  lightgbm:
+    n_estimators: 600
+    learning_rate: 0.03
+    num_leaves: 63
+  catboost:
+    iterations: 600
+    learning_rate: 0.03
+    depth: 6
+
+ekf:
+  q_h: 0.10          # process noise: altitude
+  q_v: 0.50          # process noise: velocity
+  r_baro: 4.00        # baro measurement noise variance [m²]
+  r_accel: 0.09       # IMU measurement noise variance [(m/s²)²]
+
+control:
+  target_apogee_m: 300.0
+  deadband_m: 5.0
+  gain: 0.02
+  min_coast_altitude_frac: 0.30
+  min_velocity_ms: 5.0
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  artifacts_dir: "artifacts"
+  log_level: "info"
+
+paths:
+  raw_data: "data/raw/flights.parquet"
+  processed: "data/processed"
+  artifacts: "artifacts"

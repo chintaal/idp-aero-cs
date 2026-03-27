@@ -1,0 +1,5 @@
+[console_scripts]
+airbrake-api = airbrake.api.main:app
+airbrake-bench = scripts.run_benchmark:main
+airbrake-gen = scripts.generate_dataset:main
+airbrake-train = scripts.train_pinn:main
