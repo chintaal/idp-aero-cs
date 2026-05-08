@@ -3,3 +3,4 @@ airbrake/.venv/*
 *.pyc
 __pycache__/
 */__pycache__/
+airbrake/artifacts/model_placeholders/*
