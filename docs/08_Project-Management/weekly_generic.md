@@ -64,6 +64,48 @@ Three to four points per week, aligned with the Gantt. No measured numbers here�
 - Benchmarked when to prefer alternatives: use simple regression/trees for quick baselines and explainability, sequence models when rich time history is guaranteed, and model-based filters when telemetry is sparse but equations are trusted; keep PINN as primary path for mixed-data, mixed-fidelity regimes where physics-guided extrapolation is critical.
 - Finalized the recommendation logic for future milestones: maintain **baseline conventional models** as guardrails, continue **PINN** as the main research branch, and gate promotions on joint criteria (error, residual consistency, robustness under perturbed drag/thrust inputs, and serving latency).
 
+## Week 9 (9 May 2026 – 15 May 2026)
+
+- Built formal **computing tables** for the CS stack: benchmark summary (MAE/RMSE/R²/p95/latency), **Cd–deployment lookup** from CFD/OpenRocket, and **feature-bound** reference sheets so API, training, and review docs share one source of truth.
+- Exported **reproducible table artifacts** (CSV + human-readable markdown) from the benchmark runner and dataset split logic; linked each row to checkpoint id, dataset hash, and evaluation script version.
+- Started the **SvelteKit UI** scaffold: project layout, API base URL config, and a first **results table** view that renders benchmark rows without manual copy-paste from terminal output.
+- Defined **ESP32 virtual-circuit** scope for bench/HIL: which blocks are modeled in simulation (3.3 V rail, baro/IMU placeholders, servo PWM, WiFi uplink) vs deferred to physical wiring.
+
+## Week 10 (16 May 2026 – 22 May 2026)
+
+- Extended computing tables with **phase-binned error tables** (ascent / coast / near-apogee) and **model-selection matrix** rows aligned to Week 7 criteria (accuracy, latency, physics consistency, embedded fit).
+- Shipped UI **flight-state input panel**: bounded numeric fields for `h`, `v`, `a`, deployment, and derived quantities with client-side validation mirroring FastAPI **Pydantic** limits.
+- Added UI **prediction output card** (predicted apogee, model id, metadata tags) and a **comparison table** mode: side-by-side baseline vs PINN vs OpenRocket reference when reference payload is supplied.
+- Drafted **ESP32 resource budget table**: flash/RAM headroom, max **WiFi** duty cycle, **ADC** channel allocation, and **PWM** timer limits for one servo + telemetry loop at target loop rate.
+
+## Week 11 (23 May 2026 – 29 May 2026)
+
+- Implemented the **virtual circuit** in Wokwi (or equivalent): ESP32 dev board, 3.3 V logic, **I²C** baro stub, **SPI/IMU** placeholder, **GPIO** servo signal, and **UART** debug—documented pin map and **do-not-use** strapping pins in a wiring table.
+- Coded **firmware v0.2** against virtual limits: **ADC1** channels only (WiFi-safe), **12-bit** attenuation for 0–3.3 V, **LEDC** PWM at 50 Hz for servo, **non-blocking** WiFi connect with bounded retry and watchdog-friendly main loop.
+- Enforced **software limits** in firmware: deployment command clamped **[0, 1]**, max servo slew rate, min/max apogee sanity band for uplink rejection, and **JSON payload size cap** to stay within stack/heap budget.
+- UI: **telemetry table** page (timestamp, h, v, a, deployment, predicted apogee) with sort/filter and export-to-CSV for lab notebooks.
+
+## Week 12 (30 May 2026 – 5 June 2026)
+
+- Ran **virtual-circuit regression tests**: simulated sensor streams at 10 Hz and 100 Hz, verified no **ADC** saturation, no PWM glitches under WiFi TX, and loop **jitter** within agreed bound for 1 Hz uplink + local 50 Hz servo command path.
+- Built **limits-and-envelope table** for embedded review: supply voltage range, peak **I_WiFi**, safe **GPIO** drive, **servo pulse** width min/center/max (µs), and **temperature/altitude** operating assumptions cross-linked to aero docs.
+- UI: connected live **FastAPI** predict endpoint; loading/error states; **history table** of last N predictions with latency column pulled from client-side timing.
+- Refreshed **computing tables** from latest benchmark run; diff-highlighted rows where PINN beat trees on coast-phase bins only—feeds faculty Q&A on when physics terms help.
+
+## Week 13 (6 June 2026 – 12 June 2026)
+
+- Closed **UI + virtual ESP32 + API** loop: virtual board posts telemetry JSON → API returns apogee + meta → UI dashboard updates **live table** and sparkline-style altitude trend (static demo data + optional live LAN feed).
+- Added **deployment policy preview** in UI: user selects target apogee and current state; table shows recommended deployment step from lookup/policy table (not yet closed-loop on hardware).
+- Firmware v0.3: **rate limits** on HTTP posts (max 2 Hz to API), **exponential backoff** on WiFi/API failure, **safe mode** (servo hold stowed) on sensor out-of-range or comms timeout.
+- Published **integration traceability table**: UI build id, API version, firmware git tag, checkpoint sha256, virtual-circuit diagram revision—one row per demo configuration.
+
+## Week 14 (13 June 2026 – 19 June 2026)
+
+- Demo-ready **end-to-end story**: computing tables (benchmark + Cd lookup + limits), SvelteKit UI (input, predict, compare, telemetry history), virtual ESP32 circuit (sensing → uplink → API → display) documented for interdisciplinary review.
+- Finalized **faculty-facing table pack**: model comparison, embedded limits summary, UI feature checklist, and known gaps (physical HIL, full closed-loop brake actuation on range hardware).
+- Stress-tested UI on slow network and invalid payloads; confirmed **422** errors surface as readable table rows (field, limit, message) matching API schema docs.
+- Virtual-circuit **sign-off checklist**: pin map verified, firmware limits tested, power budget table reviewed with EE; handoff notes for migrating from Wokwi to bench ESP32 without changing payload schema.
+
 ---
 
 *See also: [`Weekly-Progress-Diary.md`](./Weekly-Progress-Diary.md) (measured), [`Weekly-Report.md`](./Weekly-Report.md) (formal template).*

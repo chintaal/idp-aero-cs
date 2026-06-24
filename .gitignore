@@ -1,4 +1,6 @@
 airbrake/.venv/*
+firmware/**/.pio/
+**/.pio/
 
 *.pyc
 __pycache__/
