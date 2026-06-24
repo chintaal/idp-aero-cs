@@ -5,7 +5,7 @@ Default architecture is chosen by esp32_sizing.py under:
   - <= 450 KB fp32 weights (PROGMEM / flash)
   - <= 8 KB inference scratch (two activation buffers)
 
-Exports to firmware/esp32-airbrake-max/include/cd_model_max.h
+Exports to hardware/firmware/esp32-airbrake-max/include/cd_model_max.h
 
 Usage:
     python scripts/expand_real_data.py
@@ -39,7 +39,7 @@ from train_pinn_cd import (  # noqa: E402
     train,
 )
 
-DEFAULT_EXPORT = Path("../firmware/esp32-airbrake-max/include/cd_model_max.h")
+DEFAULT_EXPORT = Path("../hardware/firmware/esp32-airbrake-max/include/cd_model_max.h")
 DEFAULT_ARTIFACTS = Path("artifacts/cd_pinn_max")
 
 
@@ -121,6 +121,15 @@ def main() -> None:
         scaler.maxs,
         stats,
         args.export_header,
+        header_comment="Max-size Cd PINN for ESP32-S3 (flash-backed PROGMEM weights)",
+        model_tag="CD_MAX",
+    )
+    export_c_header(
+        model,
+        scaler.mins,
+        scaler.maxs,
+        stats,
+        Path("../hardware/arduino/esp32_airbrake_max/cd_model_max.h"),
         header_comment="Max-size Cd PINN for ESP32-S3 (flash-backed PROGMEM weights)",
         model_tag="CD_MAX",
     )

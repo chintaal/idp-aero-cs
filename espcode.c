@@ -1,11 +1,12 @@
 /**
- * Legacy Arduino sketch pointer.
+ * Legacy pointer — hardware lives under hardware/
  *
- * Use the PlatformIO project instead:
- *   firmware/esp32-airbrake/src/main.cpp
+ *   hardware/firmware/esp32-airbrake/       PlatformIO (tiny PINN)
+ *   hardware/firmware/esp32-airbrake-max/   PlatformIO (max PINN)
+ *   hardware/arduino/                       Arduino IDE handoff
  *
- *   make train-cd          # expand data + train PINN + export cd_model.h
- *   make firmware          # compile
- *   make firmware-upload   # flash ESP32-S3
- *   make firmware-monitor  # serial log @ 115200
+ * From repo root:
+ *   make train-cd          train + export + sync arduino sketches
+ *   make firmware          compile (no flash)
+ *   make firmware-upload   flash ESP32-S3
  */

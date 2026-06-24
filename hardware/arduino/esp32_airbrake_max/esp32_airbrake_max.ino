@@ -1,7 +1,7 @@
 /**
  * ESP32-S3 MAX PINN firmware — largest Cd PINN under flash/stack budgets.
  *
- * Project: firmware/esp32-airbrake-max/
+ * Project: hardware/firmware/esp32-airbrake-max/
  * Model:   include/cd_model_max.h  (~110K params, ~432 KB fp32 PROGMEM)
  *
  * Serial commands:

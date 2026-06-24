@@ -293,7 +293,7 @@ def main() -> None:
     parser.add_argument(
         "--export-header-default",
         type=Path,
-        default=Path("../firmware/esp32-airbrake/include/cd_model.h"),
+        default=Path("../hardware/firmware/esp32-airbrake/include/cd_model.h"),
         help="Primary header path when --export-header is not passed",
     )
     parser.add_argument("--epochs", type=int, default=800)
@@ -314,7 +314,10 @@ def main() -> None:
     n_params = sum(p.numel() for p in model.parameters())
     print(f"Training complete. Parameters: {n_params:,}  (~{n_params * 4 / 1024:.1f} KB fp32)")
 
-    export_paths = args.export_header or [args.export_header_default, Path("../cd_model.h")]
+    export_paths = args.export_header or [
+        args.export_header_default,
+        Path("../hardware/arduino/esp32_airbrake/cd_model.h"),
+    ]
     seen: set[str] = set()
     for header_path in export_paths:
         key = str(header_path.resolve())

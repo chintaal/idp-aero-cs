@@ -36,6 +36,7 @@ This vault organizes the project into a structured engineering knowledge base ra
 
 - [Airbrake Mechanical Architecture](05_Architecture/Airbrake-Mechanical-Architecture.md)
 - [Embedded Electronics and Sensing](05_Architecture/Embedded-Electronics-and-Sensing.md)
+- **Hardware bench track (firmware, BOM, wiring):** [`../hardware/`](../hardware/) — ESP32-S3 + BMP280 + MPU6050 + servo; separate from `airbrake/` ML pipeline
 - [Control, AI, and State Estimation](05_Architecture/Control-AI-and-State-Estimation.md)
 - [ML Models and Control Algorithms](05_Architecture/ML-Models-and-Control-Algorithms.md)
 

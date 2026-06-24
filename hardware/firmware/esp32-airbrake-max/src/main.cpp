@@ -1,14 +1,13 @@
 /**
- * ESP32-S3 airbrake telemetry + Tiny PINN drag-coefficient inference.
+ * ESP32-S3 MAX PINN firmware — largest Cd PINN under flash/stack budgets.
  *
- * PlatformIO project: firmware/esp32-airbrake/
- *   pio run              — compile
- *   pio run -t upload    — flash
- *   pio device monitor   — serial log (115200)
+ * Project: hardware/firmware/esp32-airbrake-max/
+ * Model:   include/cd_model_max.h  (~110K params, ~432 KB fp32 PROGMEM)
  *
  * Serial commands:
- *   d50   — set deployment to 50 %
- *   help  — list commands
+ *   d50    set deployment %
+ *   bench  run 1000 inference timing samples
+ *   help
  */
 
 #include <Arduino.h>
@@ -19,7 +18,7 @@
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 
-#include "cd_model.h"
+#include "cd_model_max.h"
 
 namespace {
 
@@ -82,17 +81,16 @@ float estimateVelocity(float alt_m, float accel_z_m_s2, float dt_s) {
   return fabsf(g_velocity_m_s);
 }
 
-void runCdInference(
+float runMaxInference(
     float deploy_pct,
     float velocity_m_s,
     float density_kg_m3,
     float area_m2,
-    float* out_cd,
     float* out_drag_n) {
   float mach = velocity_m_s / kSpeedOfSound;
   if (mach < 0.05f) mach = 0.05f;
 
-  const float features[CD_N_FEATURES] = {
+  const float features[CD_MAX_N_FEATURES] = {
       deploy_pct,
       mach,
       velocity_m_s,
@@ -100,11 +98,34 @@ void runCdInference(
       area_m2,
   };
 
-  const float cd = cd_predict(features);
-  const float drag = cd_drag_force(cd, density_kg_m3, velocity_m_s, area_m2);
-
-  if (out_cd) *out_cd = cd;
+  const float cd = cd_max_predict(features);
+  const float drag = cd_max_drag_force(cd, density_kg_m3, velocity_m_s, area_m2);
   if (out_drag_n) *out_drag_n = drag;
+  return cd;
+}
+
+void benchmarkInference() {
+  const float features[CD_MAX_N_FEATURES] = {50.0f, 0.2f, 68.6f, 1.17f, 0.018f};
+  const int samples = 1000;
+
+  cd_max_predict(features);
+
+  const uint32_t t0 = micros();
+  volatile float sink = 0.0f;
+  for (int i = 0; i < samples; i++) {
+    sink += cd_max_predict(features);
+  }
+  const uint32_t elapsed = micros() - t0;
+  (void)sink;
+
+  Serial.println("--- MAX PINN benchmark ---");
+  Serial.printf("Samples:     %d\n", samples);
+  Serial.printf("Total:       %lu us\n", (unsigned long)elapsed);
+  Serial.printf("Per infer:   %.1f us\n", elapsed / (float)samples);
+  Serial.printf("Params:      %d\n", CD_MAX_N_PARAMS);
+  Serial.printf("Weights:     %.1f KB fp32 (PROGMEM)\n", CD_MAX_WEIGHT_KB);
+  Serial.printf("Stack scratch: %d B\n", CD_MAX_STACK_BYTES);
+  Serial.println("---");
 }
 
 void handleSerialCommands() {
@@ -122,10 +143,13 @@ void handleSerialCommands() {
     } else {
       Serial.println("Usage: d0 .. d100");
     }
+  } else if (cmd == "bench" || cmd == "b") {
+    benchmarkInference();
   } else if (cmd == "help" || cmd == "?") {
     Serial.println("Commands:");
-    Serial.println("  d<N>   set deployment percent (0-100)");
-    Serial.println("  help   show this message");
+    Serial.println("  d<N>    set deployment percent (0-100)");
+    Serial.println("  bench   run inference timing benchmark");
+    Serial.println("  help    show this message");
   }
 }
 
@@ -146,17 +170,20 @@ void printInferenceBlock(
   const float area = areaFromDeployment(g_deployment_pct);
   const float mach = velocity / kSpeedOfSound;
 
-  float cd = 0.0f;
+  const uint32_t t0 = micros();
   float drag_n = 0.0f;
-  runCdInference(g_deployment_pct, velocity, density, area, &cd, &drag_n);
+  const float cd = runMaxInference(g_deployment_pct, velocity, density, area, &drag_n);
+  const uint32_t infer_us = micros() - t0;
 
-  Serial.println("--- PINN inference ---");
+  Serial.println("--- MAX PINN inference ---");
   Serial.printf("Deploy:   %.1f %%  |  Area: %.6f m2\n", g_deployment_pct, area);
   Serial.printf("Alt:      %.1f m  |  V: %.2f m/s  |  Mach: %.3f\n", alt_m, velocity, mach);
   Serial.printf("Rho:      %.4f kg/m3  |  P: %.0f Pa  |  T: %.1f C\n",
                 density, pressure_pa, temp_c);
-  Serial.printf("Cd pred:  %.4f  |  Drag: %.3f N\n", cd, drag_n);
-  Serial.printf("Model:    %d params (~%.1f KB fp32)\n", CD_N_PARAMS, CD_WEIGHT_KB);
+  Serial.printf("Cd pred:  %.4f  |  Drag: %.3f N  |  infer: %lu us\n",
+                cd, drag_n, (unsigned long)infer_us);
+  Serial.printf("Model:    %d params  |  %.1f KB fp32  |  stack %d B\n",
+                CD_MAX_N_PARAMS, CD_MAX_WEIGHT_KB, CD_MAX_STACK_BYTES);
   Serial.printf("IMU Z:    accel %.2f m/s2  |  gyro %.2f rad/s\n", accel_z, gyro_z);
   Serial.println("---");
 }
@@ -184,7 +211,9 @@ void setup() {
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
   Serial.println("MPU6050 OK");
 
-  Serial.println("Cd PINN loaded (ESP32-S3 TinyML). Type 'help' for commands.");
+  Serial.println("MAX Cd PINN loaded (ESP32-S3). Type 'help' for commands.");
+  Serial.printf("Profile: %d params, %.1f KB weights, %d B stack\n",
+                CD_MAX_N_PARAMS, CD_MAX_WEIGHT_KB, CD_MAX_STACK_BYTES);
   Serial.println("---");
 }
 
